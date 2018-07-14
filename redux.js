@@ -14,6 +14,8 @@ const actionTypes = {
 	FINISH_FETCHING_TASKS: 'FINISH_FETCHING_TASKS',
 	BEGIN_REPORTING_TASK: 'BEGIN_REPORTING_TASK',
 	FINISH_REPORTING_TASK: 'FINISH_REPORTING_TASK',
+	BEGIN_REMOVING_STOP: 'BEGIN_REMOVING_STOP',
+	SELECT_CLOSEST_STOP: 'SELECT_CLOSEST_STOP',
 };
 
 const initialState = {
@@ -29,9 +31,30 @@ const initialState = {
 export const createMyStore = () => createStore(
 	( state = initialState, action ) => {
 		switch( action.type ) {
+			case actionTypes.SELECT_CLOSEST_STOP:
+				return {
+					...state,
+					closestStop: action.newClosest,
+					stops: state.stops
+						.filter(
+							stop => stop.id !== action.newClosest.id
+						)
+						.concat( state.closestStop ),
+				};
+			break;
+			case actionTypes.BEGIN_REMOVING_STOP:
+				return {
+					...state,
+					currentlyFetchingStops: true,
+				};
+			break;
 			case actionTypes.BEGIN_REPORTING_TASK:
 				return {
 					...state,
+					closestStop: {
+						...state.closestStop,
+						taskQuest: action.taskQuest,
+					},
 					currentlyReportingTask: true,
 				};
 			break;
@@ -114,6 +137,25 @@ const fetchStops = ( latitude, longitude ) => dispatch => {
 };
 
 const actions = {
+	selectClosest( stop ) {
+		return dispatch => {
+			dispatch( {
+				type: actionTypes.SELECT_CLOSEST_STOP,
+				newClosest: stop,
+			} );
+		};
+	},
+	removeStop( stop ) {
+		return dispatch => {
+			dispatch( {
+				type: actionTypes.BEGIN_REMOVING_STOP,
+			} );
+
+			postToAPI( '/remove-stop', { id: stop.id, } )
+			.then( () => dispatch( fetchStops( stop.latitude, stop.longitude ) ) )
+			.catch( console.error );
+		};
+	},
 	loadNearbyStops() {
 		return dispatch => {
 			dispatch( {
@@ -133,6 +175,8 @@ const actions = {
 		return dispatch => {
 			dispatch( {
 				type: actionTypes.BEGIN_REPORTING_TASK,
+				stopId,
+				taskQuest,
 			} );
 
 			postToAPI( '/tasks', {

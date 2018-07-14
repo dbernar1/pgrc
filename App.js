@@ -23,23 +23,36 @@ const TaskButtons = ( { tasks, reportTask, } ) => <View style={ taskButtonStyles
 	><Text style={ [ taskButtonStyles.icon, taskButtonStyles.otherIcon, ] }>💩</Text><Text style={ taskButtonStyles.hintText }>Other</Text></TouchableOpacity>
 </View>;
 
-const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, } ) => <View style={ closestStopStyles.container }>
-	<Text style={ closestStopStyles.stopName }>{ stop.name }</Text>
-	{ ! currentlyFetchingTasks && <TaskButtons
+const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeStop, } ) => <View style={ closestStopStyles.container }>
+	<View style={ closestStopStyles.header }>
+		<Text style={ closestStopStyles.stopName }>{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }</Text>
+		{ ! stop.taskQuest && <TouchableOpacity
+			style={ closestStopStyles.deleteStop }
+			onPress={ () => removeStop( stop ) }
+		>
+			<Image source={ require( './icons/trash-solid.png' ) } />
+		</TouchableOpacity> }
+	</View>
+	{ ! currentlyFetchingTasks && ! stop.taskQuest && <TaskButtons
 		tasks={ tasks }
 		reportTask={ taskQuest => reportTask( stop.id, taskQuest ) }
 	/> }
 </View>;
 
-const NearbyStops = ( { stops, } ) => <View style={ nearbyStopsStyles.container }>
-	{ stops.map( stop => <Text key={ stop.id } style={ nearbyStopsStyles.stopName }>{ stop.name }</Text> ) }
+const NearbyStops = ( { stops, selectClosest, } ) => <View style={ nearbyStopsStyles.container }>
+	{ stops.map( stop => <TouchableOpacity
+		key={ stop.id }
+		onPress={ () => selectClosest( stop ) }
+	>
+		<Text style={ nearbyStopsStyles.stopName }>{ stop.name + ( stop.taskQuest ? ': ' + stop.taskQuest : '' ) }</Text>
+	</TouchableOpacity> ) }
 </View>;
 
 const ResearchReporter = ( {
 	errorMessage,
 	currentlyFetchingStops, closestStop, stops,
 	tasks, currentlyFetchingTasks,
-	reportTask, loadNearbyStops
+	reportTask, loadNearbyStops, removeStop, selectClosest,
 } ) => <ScrollView>
 	<Button title="Load Nearby" onPress={ loadNearbyStops } />
 	{ errorMessage && <Text style={ styles.paragraph }>{ errorMessage }</Text> }
@@ -49,24 +62,27 @@ const ResearchReporter = ( {
 		tasks={ tasks }
 		currentlyFetchingTasks={ currentlyFetchingTasks }
 		reportTask={ reportTask }
+		removeStop={ removeStop }
 	/> }
-	{ stops && <NearbyStops stops={ stops } /> }
+	{ stops && <NearbyStops stops={ stops } selectClosest={ selectClosest } /> }
 </ScrollView>;
 
 const App = () => <Provider store={ store }>
 	{ React.createElement( compose(
-		connecty(
-			[
-				'errorMessage',
-				'currentlyFetchingStops', 'closestStop', 'stops',
-				'tasks', 'currentlyFetchingTasks',
-			],
-			[ 'setUpFetchingStopsBasedOnCurrentLocation', 'loadTasks', 'reportTask', 'loadNearbyStops', ]
-		),
+		connecty( [
+			'errorMessage',
+			'currentlyFetchingStops', 'closestStop', 'stops',
+			'tasks', 'currentlyFetchingTasks',
+		], [
+			'setUpFetchingStopsBasedOnCurrentLocation',
+			'loadTasks', 'reportTask',
+			'loadNearbyStops', 'removeStop',
+			'selectClosest',
+		] ),
 		lifecycle( {
 			componentWillMount() {
-				this.props.setUpFetchingStopsBasedOnCurrentLocation();
 				this.props.loadTasks();
+				this.props.setUpFetchingStopsBasedOnCurrentLocation();
 			},
 		} ),
 		setDisplayName( 'ResearchReporter' ),
@@ -105,6 +121,15 @@ const closestStopStyles = StyleSheet.create( {
 		margin: 24,
 		fontSize: 18,
 		textAlign: 'center',
+		//flex: 4,
+	},
+	header: {
+		flexDirection: 'row',
+	},
+	deleteStop: {
+		//flex: 1,
+		//alignItems: 'flex-end',
+		paddingTop: 5,
 	},
 } );
 
