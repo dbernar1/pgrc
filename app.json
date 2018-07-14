@@ -1,5 +1,11 @@
 {
   "expo": {
+    "name": "PG Research",
+    "icon": "./icons/Chansey.png",
+    "version": "0.0.1",
+    "android": {
+      "package": "com.wpgpg.pgr"
+    },
     "sdkVersion": "27.0.0"
   }
 }
