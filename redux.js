@@ -16,6 +16,7 @@ const actionTypes = {
 	FINISH_REPORTING_TASK: 'FINISH_REPORTING_TASK',
 	BEGIN_REMOVING_STOP: 'BEGIN_REMOVING_STOP',
 	SELECT_CLOSEST_STOP: 'SELECT_CLOSEST_STOP',
+	REMOVE_REPORTED_TASK: 'REMOVE_REPORTED_TASK',
 };
 
 const initialState = {
@@ -31,6 +32,20 @@ const initialState = {
 export const createMyStore = () => createStore(
 	( state = initialState, action ) => {
 		switch( action.type ) {
+			case actionTypes.REMOVE_REPORTED_TASK:
+				const closestStop = {
+					...state.closestStop,
+
+				};
+
+				return {
+					...state,
+					closestStop: {
+						...state.closestStop,
+						taskQuest: null,
+					},
+				};
+			break;
 			case actionTypes.SELECT_CLOSEST_STOP:
 				return {
 					...state,
@@ -137,6 +152,19 @@ const fetchStops = ( latitude, longitude ) => dispatch => {
 };
 
 const actions = {
+	removeReportedTask( stopId ) {
+		return dispatch => {
+			dispatch( {
+				type: actionTypes.REMOVE_REPORTED_TASK,
+				stopId,
+			} );
+
+			postToAPI( '/remove-reported-task/', {
+				id: stopId,
+			} )
+			.catch( console.error );
+		};
+	},
 	selectClosest( stop ) {
 		return dispatch => {
 			dispatch( {

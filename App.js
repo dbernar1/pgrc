@@ -23,7 +23,7 @@ const TaskButtons = ( { tasks, reportTask, } ) => <View style={ taskButtonStyles
 	><Text style={ [ taskButtonStyles.icon, taskButtonStyles.otherIcon, ] }>💩</Text><Text style={ taskButtonStyles.hintText }>Other</Text></TouchableOpacity>
 </View>;
 
-const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeStop, } ) => <View style={ closestStopStyles.container }>
+const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeStop, removeReportedTask, } ) => <View style={ closestStopStyles.container }>
 	<View style={ closestStopStyles.header }>
 		<Text style={ closestStopStyles.stopName }>{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }</Text>
 		{ ! stop.taskQuest && <TouchableOpacity
@@ -37,6 +37,11 @@ const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeS
 		tasks={ tasks }
 		reportTask={ taskQuest => reportTask( stop.id, taskQuest ) }
 	/> }
+	{ stop.taskQuest && <TouchableOpacity
+		onPress={ () => {
+			removeReportedTask( stop.id );
+		} }
+	><Image source={ require( './icons/edit-solid3.png' ) } /></TouchableOpacity> }
 </View>;
 
 const NearbyStops = ( { stops, selectClosest, } ) => <View style={ nearbyStopsStyles.container }>
@@ -53,6 +58,7 @@ const ResearchReporter = ( {
 	currentlyFetchingStops, closestStop, stops,
 	tasks, currentlyFetchingTasks,
 	reportTask, loadNearbyStops, removeStop, selectClosest,
+	removeReportedTask,
 } ) => <ScrollView>
 	<Button title="Load Nearby" onPress={ loadNearbyStops } />
 	{ errorMessage && <Text style={ styles.paragraph }>{ errorMessage }</Text> }
@@ -63,21 +69,25 @@ const ResearchReporter = ( {
 		currentlyFetchingTasks={ currentlyFetchingTasks }
 		reportTask={ reportTask }
 		removeStop={ removeStop }
+		removeReportedTask={ removeReportedTask }
 	/> }
-	{ stops && <NearbyStops stops={ stops } selectClosest={ selectClosest } /> }
+	{ stops && <NearbyStops
+		stops={ stops }
+		selectClosest={ selectClosest }
+	/> }
 </ScrollView>;
 
 const App = () => <Provider store={ store }>
 	{ React.createElement( compose(
 		connecty( [
 			'errorMessage',
-			'currentlyFetchingStops', 'closestStop', 'stops',
-			'tasks', 'currentlyFetchingTasks',
+			'currentlyFetchingStops', 'closestStop',
+			'stops', 'tasks', 'currentlyFetchingTasks',
 		], [
 			'setUpFetchingStopsBasedOnCurrentLocation',
 			'loadTasks', 'reportTask',
 			'loadNearbyStops', 'removeStop',
-			'selectClosest',
+			'selectClosest', 'removeReportedTask',
 		] ),
 		lifecycle( {
 			componentWillMount() {
