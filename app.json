@@ -6,6 +6,9 @@
     "android": {
       "package": "com.wpgpg.pgr"
     },
+    "ios": {
+      "bundleIdentifier": "ca.bernardic.pcr"
+    },
     "sdkVersion": "27.0.0"
   }
 }
