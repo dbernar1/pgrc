@@ -1,9 +1,9 @@
 import React from 'react';
-import { Button, ScrollView, Platform, Text, View, StyleSheet, TouchableOpacity, Image, } from 'react-native';
+import { RefreshControl, Button, ScrollView, Platform, Text, View, StyleSheet, TouchableOpacity, Image, SafeAreaView, } from 'react-native';
 import { compose, lifecycle, setDisplayName, } from 'recompose';
 import { Provider, } from 'react-redux';
 import { createMyStore, connecty, } from './redux';
-import { Constants, } from 'expo';
+import { Constants, WebBrowser, } from 'expo';
 import { apiHost, } from './config';
 
 const store = createMyStore();
@@ -25,7 +25,9 @@ const TaskButtons = ( { tasks, reportTask, } ) => <View style={ taskButtonStyles
 
 const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeStop, removeReportedTask, } ) => <View style={ closestStopStyles.container }>
 	<View style={ closestStopStyles.header }>
-		<Text style={ closestStopStyles.stopName }>{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }</Text>
+		<Text style={ closestStopStyles.stopName }>
+			{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }{ '  ' }
+		</Text>
 		{ ! stop.taskQuest && <TouchableOpacity
 			style={ closestStopStyles.deleteStop }
 			onPress={ () => removeStop( stop ) }
@@ -59,10 +61,13 @@ const ResearchReporter = ( {
 	tasks, currentlyFetchingTasks,
 	reportTask, loadNearbyStops, removeStop, selectClosest,
 	removeReportedTask,
-} ) => <ScrollView>
-	<Button title="Load Nearby" onPress={ loadNearbyStops } />
+} ) => <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}><ScrollView
+	refreshControl={ <RefreshControl
+		refreshing={ currentlyFetchingStops }
+		onRefresh={ loadNearbyStops }
+	/> }
+>
 	{ errorMessage && <Text style={ styles.paragraph }>{ errorMessage }</Text> }
-	{ currentlyFetchingStops && <Text style={ styles.paragraph }>Loading…</Text> }
 	{ closestStop &&  <ClosestStop
 		stop={ closestStop }
 		tasks={ tasks }
@@ -75,7 +80,11 @@ const ResearchReporter = ( {
 		stops={ stops }
 		selectClosest={ selectClosest }
 	/> }
-</ScrollView>;
+	<Button
+		title="See map"
+		onPress={ () => WebBrowser.openBrowserAsync( 'https://pcr.bernardic.ca/pgr/map?latitude=' + closestStop.latitude + '&longitude=' + closestStop.longitude ) }
+	/>
+</ScrollView></SafeAreaView>;
 
 const App = () => <Provider store={ store }>
 	{ React.createElement( compose(
@@ -119,7 +128,6 @@ const taskButtonStyles = StyleSheet.create( {
 		marginTop: 10,
 		textAlign: 'center',
 		height: 62,
-		//margin: 12,
 	},
 } );
 
@@ -131,15 +139,13 @@ const closestStopStyles = StyleSheet.create( {
 		margin: 24,
 		fontSize: 18,
 		textAlign: 'center',
-		//flex: 4,
 	},
 	header: {
 		flexDirection: 'row',
+		flexWrap: 'wrap',
 	},
 	deleteStop: {
-		//flex: 1,
-		//alignItems: 'flex-end',
-		paddingTop: 5,
+		paddingTop: 25,
 	},
 } );
 
