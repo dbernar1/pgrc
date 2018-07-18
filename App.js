@@ -5,6 +5,7 @@ import { Provider, } from 'react-redux';
 import { createMyStore, connecty, } from './redux';
 import { Constants, WebBrowser, } from 'expo';
 import { apiHost, } from './config';
+import { findWhere, } from 'underscore';
 
 const store = createMyStore();
 
@@ -28,7 +29,14 @@ const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeS
 		<Text style={ closestStopStyles.stopName }>
 			{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }{ '  ' }
 		</Text>
-		{ ! stop.taskQuest && <TouchableOpacity
+		{ stop.taskQuest
+		? <TouchableOpacity
+			style={ closestStopStyles.deleteStop }
+			onPress={ () => removeReportedTask( stop.id ) }
+		>
+			<Image source={ require( './icons/edit-solid3.png' ) } />
+		</TouchableOpacity>
+		: <TouchableOpacity
 			style={ closestStopStyles.deleteStop }
 			onPress={ () => removeStop( stop ) }
 		>
@@ -39,11 +47,12 @@ const ClosestStop = ( { stop, tasks, currentlyFetchingTasks, reportTask, removeS
 		tasks={ tasks }
 		reportTask={ taskQuest => reportTask( stop.id, taskQuest ) }
 	/> }
-	{ stop.taskQuest && <TouchableOpacity
-		onPress={ () => {
-			removeReportedTask( stop.id );
+	{ stop.taskQuest && <Image
+		source={ {
+			uri: `${ apiHost }/icons/${ findWhere( tasks, { quest: stop.taskQuest, } ).reward }.png`,
 		} }
-	><Image source={ require( './icons/edit-solid3.png' ) } /></TouchableOpacity> }
+		style={ taskButtonStyles.icon }
+	/> }
 </View>;
 
 const NearbyStops = ( { stops, selectClosest, } ) => <View style={ nearbyStopsStyles.container }>
