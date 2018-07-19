@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, } from 'react-native';
 import { findWhere, } from 'underscore';
 import { apiHost, } from '../config';
-import TaskButtons from './TaskButtons';
 
 const ClosestStop = ( {
 	stop, tasks,
@@ -13,25 +12,16 @@ const ClosestStop = ( {
 		<Text style={ closestStopStyles.stopName }>
 			{ stop.name }{ stop.taskQuest ? ': ' + stop.taskQuest : '' }{ '  ' }
 		</Text>
-		{ stop.taskQuest
-		? <EditReportedTask stop={ stop } removeReportedTask={ removeReportedTask } />
-		: <RemoveStop stop={ stop } removeStop={ removeStop } /> }
+		{ ! stop.taskQuest && <RemoveStop stop={ stop } removeStop={ removeStop } /> }
 	</View>
 	{ ! currentlyFetchingTasks && ! stop.taskQuest && <TaskButtons
 		tasks={ tasks }
 		reportTask={ taskQuest => reportTask( stop.id, taskQuest ) }
 	/> }
-	<TodaysQuest stop={ stop } tasks={ tasks } />
+	{ ! currentlyFetchingTasks && <TodaysQuest stop={ stop } tasks={ tasks } removeReportedTask={ removeReportedTask } /> }
 </View>;
 
 export default ClosestStop;
-
-const EditReportedTask = ( { stop, removeReportedTask, } ) => <TouchableOpacity
-	style={ closestStopStyles.deleteStop }
-	onPress={ () => removeReportedTask( stop.id ) }
->
-	<Image source={ require( '../icons/edit-solid3.png' ) } />
-</TouchableOpacity>;
 
 const RemoveStop = ( { stop, removeStop, } ) => <TouchableOpacity
 	style={ closestStopStyles.deleteStop }
@@ -40,12 +30,72 @@ const RemoveStop = ( { stop, removeStop, } ) => <TouchableOpacity
 	<Image source={ require( '../icons/trash-solid.png' ) } />
 </TouchableOpacity>;
 
-const TodaysQuest = ( { stop, tasks, } ) => stop.taskQuest && <Image
-	source={ {
-		uri: `${ apiHost }/icons/${ findWhere( tasks, { quest: stop.taskQuest, } ).reward }.png`,
-	} }
-	style={ taskButtonStyles.icon }
-/>;
+const TodaysQuest = ( { stop, tasks, removeReportedTask, } ) => stop.taskQuest && <View style={ closestStopStyles.todaysQuestContainer }>
+	<Image
+		source={ {
+			uri: `${ apiHost }/icons/${ findWhere( tasks, { quest: stop.taskQuest, } ).reward }.png`,
+		} }
+		style={ taskButtonStyles.icon }
+	/>
+	<EditReportedTask stop={ stop } removeReportedTask={ removeReportedTask } />
+</View>;
+
+const EditReportedTask = ( { stop, removeReportedTask, } ) => <TouchableOpacity
+	style={ closestStopStyles.deleteStop }
+	onPress={ () => removeReportedTask( stop.id ) }
+>
+	<Image source={ require( '../icons/edit-solid3.png' ) } />
+</TouchableOpacity>;
+
+const TaskButton = ( { task, reportTask, } ) => <TouchableOpacity
+	onPress={ () => reportTask( task.quest ) }
+>
+	<Image
+		source={ {
+			uri: `${ apiHost }/icons/${ task.reward }.png`,
+		} }
+		style={ taskButtonStyles.icon }
+	/>
+	<Text style={ taskButtonStyles.hintText }>{ task.hint }</Text>
+</TouchableOpacity>;
+
+const OtherTasksButton = ( { reportTask, } ) => <TouchableOpacity
+	onPress={ () => reportTask( 'Poo' ) }
+>
+	<Text style={ [ taskButtonStyles.icon, taskButtonStyles.otherIcon, ] }>💩</Text>
+	<Text style={ taskButtonStyles.hintText }>Other</Text>
+</TouchableOpacity>;
+
+const TaskButtons = ( { tasks, reportTask, } ) => <View style={ taskButtonStyles.container }>
+	<OtherTasksButton reportTask={ reportTask } />
+
+	{ tasks.map( task => <TaskButton
+		key={ task.quest }
+		task={ task }
+		reportTask={ reportTask }
+	/> ) }
+</View>;
+
+const taskButtonStyles = StyleSheet.create( {
+	container: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+	},
+	hintText: {
+		fontSize: 8,
+		textAlign: 'center',
+	},
+	icon: {
+		width: 72,
+		height: 72,
+	},
+	otherIcon: {
+		fontSize: 24,
+		marginTop: 10,
+		textAlign: 'center',
+		height: 62,
+	},
+} );
 
 const closestStopStyles = StyleSheet.create( {
 	container: {
@@ -62,5 +112,10 @@ const closestStopStyles = StyleSheet.create( {
 	},
 	deleteStop: {
 		paddingTop: 25,
+	},
+	todaysQuestContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 } );

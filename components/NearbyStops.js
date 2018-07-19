@@ -17,10 +17,11 @@ export default NearbyStops;
 const nearbyStopsStyles = StyleSheet.create( {
 	container: {
 		flex: 1,
+		marginBottom: 20,
 	},
 	stopName: {
-		margin: 24,
-		fontSize: 18,
+		marginTop: 10,
+		fontSize: 12,
 		textAlign: 'center',
 	},
 } );
